@@ -1,0 +1,313 @@
+export type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+
+export type PlacementQuestion = {
+  id: string;
+  level: CefrLevel;
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+};
+
+/** Banco amplo: o endpoint sorteia 10 sem repetir as do último usuário. */
+export const PLACEMENT_QUESTION_BANK: PlacementQuestion[] = [
+  // A1
+  {
+    id: "a1-1",
+    level: "A1",
+    question: "Excuse me, ___ you speak English? Yes, I ___ a little.",
+    options: ["do / do", "are / am", "does / speak", "do / speak"],
+    correct: 3,
+    explanation: "Usamos 'do' para perguntas no Present Simple com 'you', e 'speak' como verbo principal.",
+  },
+  {
+    id: "a1-2",
+    level: "A1",
+    question: "She ___ a teacher. She ___ at a school near my house.",
+    options: ["is / works", "are / work", "is / work", "am / works"],
+    correct: 0,
+    explanation: "Com 'she' usamos 'is' e o verbo no Present Simple com -s: works.",
+  },
+  {
+    id: "a1-3",
+    level: "A1",
+    question: "___ is your name? My name ___ Carlos.",
+    options: ["What / is", "Who / are", "Where / is", "What / are"],
+    correct: 0,
+    explanation: "'What is your name?' e 'My name is...' são estruturas básicas de apresentação.",
+  },
+  {
+    id: "a1-4",
+    level: "A1",
+    question: "I ___ from Brazil. I ___ coffee every morning.",
+    options: ["am / drink", "is / drinks", "are / drink", "am / drinks"],
+    correct: 0,
+    explanation: "'I am' para origem e Present Simple 'drink' sem -s com 'I'.",
+  },
+  {
+    id: "a1-5",
+    level: "A1",
+    question: "There ___ a book on the table. There ___ two pens too.",
+    options: ["is / are", "are / is", "is / is", "are / are"],
+    correct: 0,
+    explanation: "'There is' para singular e 'There are' para plural.",
+  },
+  {
+    id: "a1-6",
+    level: "A1",
+    question: "___ you like pizza? Yes, I ___.",
+    options: ["Do / do", "Are / am", "Does / does", "Do / like"],
+    correct: 0,
+    explanation: "Perguntas com 'do you' e resposta curta 'Yes, I do'.",
+  },
+
+  // A2
+  {
+    id: "a2-1",
+    level: "A2",
+    question: "Where ___ you last night? I ___ to the cinema with John.",
+    options: ["did / went", "was / go", "were / went", "were / was going"],
+    correct: 2,
+    explanation: "O passado de 'to be' com 'you' é 'were'; o passado de 'go' é 'went'.",
+  },
+  {
+    id: "a2-2",
+    level: "A2",
+    question: "I ___ TV when the phone ___.",
+    options: ["watched / rang", "was watching / rang", "was watching / was ringing", "watch / rang"],
+    correct: 1,
+    explanation: "Past Continuous para ação em progresso + Past Simple para interrupção.",
+  },
+  {
+    id: "a2-3",
+    level: "A2",
+    question: "She is ___ than her sister, but her sister is the ___ in the family.",
+    options: ["taller / tallest", "tall / taller", "more tall / most tall", "taller / most tall"],
+    correct: 0,
+    explanation: "Comparativo 'taller' e superlativo 'the tallest'.",
+  },
+  {
+    id: "a2-4",
+    level: "A2",
+    question: "We ___ to the beach next weekend. It's already planned!",
+    options: ["go", "are going", "went", "have gone"],
+    correct: 1,
+    explanation: "Present Continuous pode expressar planos futuros definidos.",
+  },
+  {
+    id: "a2-5",
+    level: "A2",
+    question: "You ___ eat so much sugar. It's not healthy.",
+    options: ["should", "shouldn't", "must to", "can to"],
+    correct: 1,
+    explanation: "'Shouldn't' expressa conselho negativo.",
+  },
+  {
+    id: "a2-6",
+    level: "A2",
+    question: "I've lived here ___ 2019.",
+    options: ["for", "since", "during", "ago"],
+    correct: 1,
+    explanation: "'Since' + ponto no tempo; 'for' + período de duração.",
+  },
+
+  // B1
+  {
+    id: "b1-1",
+    level: "B1",
+    question: "I can't find my keys! I think I ___ them at the office.",
+    options: ["have left", "left", "had left", "was leaving"],
+    correct: 0,
+    explanation: "Present Perfect para ação passada com impacto no presente.",
+  },
+  {
+    id: "b1-2",
+    level: "B1",
+    question: "This book ___ in 1998 by a famous Brazilian author.",
+    options: ["was written", "wrote", "is written", "had been writing"],
+    correct: 0,
+    explanation: "Voz passiva no Past Simple: was/were + particípio.",
+  },
+  {
+    id: "b1-3",
+    level: "B1",
+    question: "If it ___ tomorrow, we ___ the picnic.",
+    options: ["rains / will cancel", "will rain / cancel", "rained / would cancel", "rain / cancel"],
+    correct: 0,
+    explanation: "First Conditional: If + Present Simple, will + verbo.",
+  },
+  {
+    id: "b1-4",
+    level: "B1",
+    question: "He said he ___ busy that day.",
+    options: ["is", "was", "were", "has been"],
+    correct: 1,
+    explanation: "Reported speech: Present → Past ('is' vira 'was').",
+  },
+  {
+    id: "b1-5",
+    level: "B1",
+    question: "By the time we arrived, the movie ___.",
+    options: ["started", "has started", "had started", "was start"],
+    correct: 2,
+    explanation: "Past Perfect para ação anterior a outro passado.",
+  },
+  {
+    id: "b1-6",
+    level: "B1",
+    question: "She's the woman ___ helped me yesterday.",
+    options: ["which", "who", "whose", "where"],
+    correct: 1,
+    explanation: "'Who' refere-se a pessoas como sujeito da oração relativa.",
+  },
+
+  // B2
+  {
+    id: "b2-1",
+    level: "B2",
+    question: "If I ___ harder at university, I ___ a better job now.",
+    options: ["studied / would have", "had studied / would have", "studied / would have had", "had studied / would had"],
+    correct: 1,
+    explanation: "Mixed Conditional: hipótese no passado com resultado no presente.",
+  },
+  {
+    id: "b2-2",
+    level: "B2",
+    question: "Our boss decided to ___ the meeting because of the storm.",
+    options: ["call off", "put off", "look after", "take off"],
+    correct: 1,
+    explanation: "'Put off' = adiar; 'call off' = cancelar.",
+  },
+  {
+    id: "b2-3",
+    level: "B2",
+    question: "I'd rather you ___ smoke in here.",
+    options: ["don't", "didn't", "not", "won't"],
+    correct: 1,
+    explanation: "'Would rather + sujeito' costuma levar Past Subjunctive.",
+  },
+  {
+    id: "b2-4",
+    level: "B2",
+    question: "The report ___ by Friday, otherwise the client will complain.",
+    options: ["must finish", "must be finished", "must to finish", "must finishing"],
+    correct: 1,
+    explanation: "Passiva com modal: must be + particípio.",
+  },
+  {
+    id: "b2-5",
+    level: "B2",
+    question: "She apologized ___ being late.",
+    options: ["to", "for", "about", "of"],
+    correct: 1,
+    explanation: "'Apologize for + gerúndio/substantivo'.",
+  },
+  {
+    id: "b2-6",
+    level: "B2",
+    question: "Not only ___ late, but he also forgot the documents.",
+    options: ["he was", "was he", "he is", "did he"],
+    correct: 1,
+    explanation: "Após 'Not only' no início, invertemos auxiliar e sujeito.",
+  },
+
+  // C1
+  {
+    id: "c1-1",
+    level: "C1",
+    question: "Rarely ___ such a spectacular view in my entire life.",
+    options: ["I had seen", "did I saw", "had I seen", "I saw"],
+    correct: 2,
+    explanation: "Inversão adverbial com 'rarely': auxiliar antes do sujeito.",
+  },
+  {
+    id: "c1-2",
+    level: "C1",
+    question: "I would rather you ___ tell anyone what happened yesterday.",
+    options: ["don't", "didn't", "wouldn't", "not to"],
+    correct: 1,
+    explanation: "'Would rather + pronome' + Past Subjunctive.",
+  },
+  {
+    id: "c1-3",
+    level: "C1",
+    question: "Hardly ___ the announcement when everyone started cheering.",
+    options: ["he had finished", "had he finished", "he finished", "did he finish"],
+    correct: 1,
+    explanation: "'Hardly... when' exige inversão com Past Perfect.",
+  },
+  {
+    id: "c1-4",
+    level: "C1",
+    question: "The committee insisted that he ___ present at the meeting.",
+    options: ["is", "was", "be", "being"],
+    correct: 2,
+    explanation: "Subjuntivo mandativo após 'insist that': forma base 'be'.",
+  },
+  {
+    id: "c1-5",
+    level: "C1",
+    question: "___ the weather, the event will go ahead as planned.",
+    options: ["Although", "Despite", "However", "Whereas"],
+    correct: 1,
+    explanation: "'Despite' + substantivo/gerúndio; 'Although' pede oração completa.",
+  },
+  {
+    id: "c1-6",
+    level: "C1",
+    question: "She's known for her ability to ___ complex ideas simply.",
+    options: ["put across", "put up", "put off", "put down"],
+    correct: 0,
+    explanation: "'Put across' = comunicar/transmitir uma ideia com clareza.",
+  },
+
+  // C2
+  {
+    id: "c2-1",
+    level: "C2",
+    question: "He is a brilliant scientist, ___ dedication to research is unparalleled.",
+    options: ["whose", "whom", "of which", "that"],
+    correct: 0,
+    explanation: "'Whose' expressa posse relativa (cuja dedicação).",
+  },
+  {
+    id: "c2-2",
+    level: "C2",
+    question: "The project was a failure, but we had to put a brave ___ on it for the media.",
+    options: ["face", "front", "head", "mind"],
+    correct: 0,
+    explanation: "Idioma: 'put a brave face on something'.",
+  },
+  {
+    id: "c2-3",
+    level: "C2",
+    question: "His argument, ___ persuasive at first glance, fell apart under scrutiny.",
+    options: ["albeit", "unless", "lest", "insofar"],
+    correct: 0,
+    explanation: "'Albeit' = embora/ainda que (concessivo formal).",
+  },
+  {
+    id: "c2-4",
+    level: "C2",
+    question: "She took his criticism with a ___ of salt.",
+    options: ["pinch", "grain", "dash", "touch"],
+    correct: 0,
+    explanation: "Idioma: 'take something with a pinch of salt'.",
+  },
+  {
+    id: "c2-5",
+    level: "C2",
+    question: "Little ___ that the decision would change his career forever.",
+    options: ["he knew", "did he know", "he did know", "knew he"],
+    correct: 1,
+    explanation: "Inversão após 'Little' no início da frase.",
+  },
+  {
+    id: "c2-6",
+    level: "C2",
+    question: "The proposal was rejected ___ of its considerable merits.",
+    options: ["in spite", "despite", "regardless", "notwithstanding"],
+    correct: 3,
+    explanation: "'Notwithstanding' = apesar de (registro formal); 'in spite' precisa de 'of'.",
+  },
+];

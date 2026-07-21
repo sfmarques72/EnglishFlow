@@ -1,0 +1,6 @@
+{
+  "name": "EnglishFlow",
+  "description": "Plataforma de estudo de inglês focada em conversação e montagem de frases para alunos de nível A1-A2, com cronograma estruturado, chat com IA para prática e gravação de áudio para autoavaliação.",
+  "requestFramePermissions": ["microphone", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
