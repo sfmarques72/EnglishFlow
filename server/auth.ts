@@ -18,6 +18,8 @@ export type AuthUser = {
 export type JwtPayload = {
   sub: string;
   email: string;
+  name: string;
+  createdAt?: string;
 };
 
 declare global {
@@ -45,12 +47,17 @@ export function verifyPassword(password: string, passwordHash: string): boolean 
 }
 
 export function signToken(user: UserRow): string {
-  const payload: JwtPayload = { sub: user.id, email: user.email };
+  const payload: JwtPayload = {
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    createdAt: user.created_at,
+  };
   return jwt.sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN });
 }
 
 export function setAuthCookie(res: Response, token: string) {
-  const isProd = process.env.NODE_ENV === "production";
+  const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
   res.cookie(AUTH_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -61,7 +68,7 @@ export function setAuthCookie(res: Response, token: string) {
 }
 
 export function clearAuthCookie(res: Response) {
-  const isProd = process.env.NODE_ENV === "production";
+  const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
   res.clearCookie(AUTH_COOKIE, {
     httpOnly: true,
     sameSite: "lax",
@@ -94,6 +101,15 @@ export function getUserFromRequest(req: Request): AuthUser | null {
 
   try {
     const payload = jwt.verify(token, getJwtSecret()) as JwtPayload;
+    // Prefer JWT profile so /me works on Vercel without re-hitting an empty ephemeral DB
+    if (payload.email && payload.name && payload.sub) {
+      return {
+        id: payload.sub,
+        email: payload.email,
+        name: payload.name,
+        createdAt: payload.createdAt || new Date().toISOString(),
+      };
+    }
     const user = findUserById(payload.sub);
     if (!user) return null;
     return toPublicUser(user);

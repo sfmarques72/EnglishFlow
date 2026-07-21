@@ -37,7 +37,7 @@ authRouter.post("/register", (req, res) => {
   const token = signToken(user);
   setAuthCookie(res, token);
 
-  return res.status(201).json({ user: toPublicUser(user) });
+  return res.status(201).json({ user: toPublicUser(user), token });
 });
 
 authRouter.post("/login", (req, res) => {
@@ -56,7 +56,7 @@ authRouter.post("/login", (req, res) => {
   const token = signToken(user);
   setAuthCookie(res, token);
 
-  return res.json({ user: toPublicUser(user) });
+  return res.json({ user: toPublicUser(user), token });
 });
 
 authRouter.post("/logout", (_req, res) => {

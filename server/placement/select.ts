@@ -14,14 +14,16 @@ const QUIZ_SIZE_BY_LEVEL: Record<CefrLevel, number> = {
   C2: 2,
 };
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS placement_quiz_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT,
-    question_ids TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  );
-`);
+if (db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS placement_quiz_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT,
+      question_ids TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `);
+}
 
 function shuffleInPlace<T>(items: T[]): T[] {
   for (let i = items.length - 1; i > 0; i--) {
@@ -32,6 +34,8 @@ function shuffleInPlace<T>(items: T[]): T[] {
 }
 
 function getRecentlyUsedQuestionIds(limitQuizzes = 1): Set<string> {
+  if (!db) return new Set();
+
   const rows = db
     .prepare(
       `SELECT question_ids FROM placement_quiz_log
@@ -83,14 +87,16 @@ export function buildPlacementQuiz(userId?: string): PlacementQuestion[] {
 
   const quiz = shuffleInPlace(selected).map(shuffleOptions);
 
-  db.prepare(
-    `INSERT INTO placement_quiz_log (user_id, question_ids, created_at)
-     VALUES (?, ?, ?)`
-  ).run(
-    userId ?? null,
-    JSON.stringify(quiz.map((q) => q.id)),
-    new Date().toISOString()
-  );
+  if (db) {
+    db.prepare(
+      `INSERT INTO placement_quiz_log (user_id, question_ids, created_at)
+       VALUES (?, ?, ?)`
+    ).run(
+      userId ?? null,
+      JSON.stringify(quiz.map((q) => q.id)),
+      new Date().toISOString()
+    );
+  }
 
   return quiz;
 }
