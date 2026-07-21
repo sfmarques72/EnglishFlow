@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import { BookOpen, Loader2 } from "lucide-react";
-import { AuthUser, loginUser, registerUser } from "../lib/authApi";
+import { AuthUser, enterAsGuest, loginUser, registerUser } from "../lib/authApi";
 
 interface AuthViewProps {
   onAuthenticated: (user: AuthUser) => void;
@@ -30,6 +30,11 @@ export function AuthView({ onAuthenticated }: AuthViewProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGuest = () => {
+    setError(null);
+    onAuthenticated(enterAsGuest(name.trim() || "Visitante"));
   };
 
   return (
@@ -140,6 +145,20 @@ export function AuthView({ onAuthenticated }: AuthViewProps) {
               <span>{mode === "login" ? "Entrar" : "Criar conta"}</span>
             </button>
           </form>
+
+          <div className="mt-5 pt-5 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleGuest}
+              disabled={loading}
+              className="w-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-60 text-sm font-bold px-4 py-3.5 rounded-2xl transition-all cursor-pointer"
+            >
+              Continuar sem conta
+            </button>
+            <p className="mt-2 text-center text-[11px] text-slate-400 leading-relaxed">
+              Progresso fica só neste dispositivo. Sem login no servidor.
+            </p>
+          </div>
         </div>
       </div>
     </div>

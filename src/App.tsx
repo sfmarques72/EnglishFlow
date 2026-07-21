@@ -12,7 +12,7 @@ import { ReadingView } from "./components/ReadingView";
 import { AuthView } from "./components/AuthView";
 import { STUDY_SCHEDULE, getSessionsForLevel } from "./data/schedule";
 import { Session, ErrorLog, AppState, ExamResult, InterviewSession } from "./types";
-import { AuthUser, fetchCurrentUser, logoutUser } from "./lib/authApi";
+import { AuthUser, fetchCurrentUser, getGuestUser, logoutUser } from "./lib/authApi";
 import { extractErrorsFromInterview, mergeErrorLogs } from "./lib/extractSessionErrors";
 import { BookOpen, Loader2, RotateCcw } from "lucide-react";
 
@@ -38,9 +38,16 @@ export default function App() {
   // Active Session state
   const [activeSession, setActiveSession] = useState<Session | null>(null);
 
-  // Resolve authenticated session on mount
+  // Resolve authenticated session on mount (guest first — no API needed)
   useEffect(() => {
     let cancelled = false;
+
+    const guest = getGuestUser();
+    if (guest) {
+      setAuthUser(guest);
+      setAuthLoading(false);
+      return;
+    }
 
     fetchCurrentUser()
       .then((user) => {
