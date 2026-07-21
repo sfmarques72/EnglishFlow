@@ -229,7 +229,9 @@ Please reply to the student's last message following your instructions and retur
     return app;
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+
+  if (!isProd) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -238,8 +240,11 @@ Please reply to the student's last message following your instructions and retur
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) return next();
+      res.sendFile(path.join(distPath, "index.html"), (err) => {
+        if (err) next(err);
+      });
     });
   }
 
