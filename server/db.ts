@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { createRequire } from "module";
 
 export type UserRow = {
   id: string;
@@ -10,97 +9,127 @@ export type UserRow = {
   created_at: string;
 };
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...params: unknown[]) => unknown;
-    run: (...params: unknown[]) => unknown;
-    all: (...params: unknown[]) => unknown;
-  };
-  exec: (sql: string) => void;
+type StoreFile = {
+  users: UserRow[];
+  placementLog: Array<{ user_id: string | null; question_ids: string; created_at: string }>;
 };
 
 const isVercel = Boolean(process.env.VERCEL);
+const dataDir = isVercel ? "/tmp" : path.join(process.cwd(), "data");
+const storePath = path.join(dataDir, "englishflow-store.json");
+
 const memoryUsers = new Map<string, UserRow>();
-export let db: DbLike | null = null;
+let placementLog: StoreFile["placementLog"] = [];
 
-try {
-  const require = createRequire(import.meta.url);
-  const { DatabaseSync } = require("node:sqlite") as {
-    DatabaseSync: new (path: string) => DbLike;
-  };
-
-  const dataDir = isVercel
-    ? path.join("/tmp", "englishflow-data")
-    : path.join(process.cwd(), "data");
-  const dbPath = path.join(dataDir, "englishflow.db");
-
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+function ensureDir() {
+  try {
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  } catch {
+    // ignore
   }
+}
 
-  const sqlite = new DatabaseSync(dbPath);
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-      name TEXT NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-  `);
-  db = sqlite;
+function readStore(): StoreFile {
+  try {
+    if (!fs.existsSync(storePath)) return { users: [], placementLog: [] };
+    const raw = fs.readFileSync(storePath, "utf8");
+    const parsed = JSON.parse(raw) as StoreFile;
+    return {
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      placementLog: Array.isArray(parsed.placementLog) ? parsed.placementLog : [],
+    };
+  } catch {
+    return { users: [], placementLog: [] };
+  }
+}
 
-  const rows = db
-    .prepare("SELECT id, email, name, password_hash, created_at FROM users")
-    .all() as UserRow[];
-  for (const row of rows) {
+function writeStore() {
+  try {
+    ensureDir();
+    const users = [...memoryUsers.values()].filter((u, i, arr) => {
+      // Map has email + id: keys; keep unique by id
+      return arr.findIndex((x) => x.id === u.id) === i;
+    });
+    // Deduplicate properly
+    const byId = new Map<string, UserRow>();
+    for (const u of memoryUsers.values()) byId.set(u.id, u);
+    const payload: StoreFile = {
+      users: [...byId.values()],
+      placementLog: placementLog.slice(-50),
+    };
+    fs.writeFileSync(storePath, JSON.stringify(payload), "utf8");
+  } catch (err) {
+    console.warn("[db] failed to persist store:", err);
+  }
+}
+
+function hydrate() {
+  const store = readStore();
+  placementLog = store.placementLog;
+  for (const row of store.users) {
     memoryUsers.set(row.email.toLowerCase(), row);
     memoryUsers.set(`id:${row.id}`, row);
   }
-} catch (err) {
-  console.warn("[db] SQLite unavailable — using in-memory user store.", err);
-  db = null;
 }
 
-export function findUserByEmail(email: string): UserRow | undefined {
-  const key = email.trim().toLowerCase();
-  const mem = memoryUsers.get(key);
-  if (mem) return mem;
-  if (!db) return undefined;
+hydrate();
 
-  try {
-    const row = db
-      .prepare(
-        "SELECT id, email, name, password_hash, created_at FROM users WHERE email = ? COLLATE NOCASE"
-      )
-      .get(email.trim()) as UserRow | undefined;
-    if (row) {
-      memoryUsers.set(row.email.toLowerCase(), row);
-      memoryUsers.set(`id:${row.id}`, row);
-    }
-    return row;
-  } catch {
-    return undefined;
-  }
+/** Compatibility shim for placement module (old sqlite API). */
+export const db = {
+  exec(_sql: string) {
+    // no-op — schema is JSON now
+  },
+  prepare(sql: string) {
+    return {
+      get(...params: unknown[]) {
+        if (sql.includes("WHERE email")) {
+          return findUserByEmail(String(params[0] || ""));
+        }
+        if (sql.includes("WHERE id")) {
+          return findUserById(String(params[0] || ""));
+        }
+        return undefined;
+      },
+      run(...params: unknown[]) {
+        if (sql.includes("INSERT INTO users")) {
+          // handled by createUser
+          return;
+        }
+        if (sql.includes("INSERT INTO placement_quiz_log")) {
+          placementLog.push({
+            user_id: (params[0] as string | null) ?? null,
+            question_ids: String(params[1] || "[]"),
+            created_at: String(params[2] || new Date().toISOString()),
+          });
+          writeStore();
+        }
+      },
+      all(...params: unknown[]) {
+        if (sql.includes("placement_quiz_log")) {
+          const limit = Number(params[0] || 1);
+          return placementLog
+            .slice()
+            .reverse()
+            .slice(0, limit)
+            .map((row) => ({ question_ids: row.question_ids }));
+        }
+        if (sql.includes("FROM users")) {
+          const byId = new Map<string, UserRow>();
+          for (const u of memoryUsers.values()) byId.set(u.id, u);
+          return [...byId.values()];
+        }
+        return [];
+      },
+    };
+  },
+};
+
+export function findUserByEmail(email: string): UserRow | undefined {
+  return memoryUsers.get(email.trim().toLowerCase());
 }
 
 export function findUserById(id: string): UserRow | undefined {
-  const mem = memoryUsers.get(`id:${id}`);
-  if (mem) return mem;
-  if (!db) return undefined;
-
-  try {
-    const row = db
-      .prepare("SELECT id, email, name, password_hash, created_at FROM users WHERE id = ?")
-      .get(id) as UserRow | undefined;
-    if (row) {
-      memoryUsers.set(row.email.toLowerCase(), row);
-      memoryUsers.set(`id:${row.id}`, row);
-    }
-    return row;
-  } catch {
-    return undefined;
-  }
+  return memoryUsers.get(`id:${id}`);
 }
 
 export function createUser(input: {
@@ -111,6 +140,10 @@ export function createUser(input: {
   createdAt: string;
 }): UserRow {
   const email = input.email.trim().toLowerCase();
+  if (findUserByEmail(email)) {
+    throw new Error("Já existe uma conta com este e-mail.");
+  }
+
   const user: UserRow = {
     id: input.id,
     email,
@@ -119,18 +152,9 @@ export function createUser(input: {
     created_at: input.createdAt,
   };
 
-  if (db) {
-    try {
-      db.prepare(
-        "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)"
-      ).run(user.id, email, user.name, user.password_hash, user.created_at);
-    } catch (err: any) {
-      console.warn("SQLite insert warning:", err?.message || err);
-    }
-  }
-
   memoryUsers.set(email, user);
   memoryUsers.set(`id:${user.id}`, user);
+  writeStore();
   return user;
 }
 
