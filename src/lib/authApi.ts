@@ -41,12 +41,26 @@ function authHeaders(json = false): HeadersInit {
   return headers;
 }
 
-async function parseJson<T>(res: Response): Promise<T> {
-  const data = (await res.json().catch(() => ({}))) as T & ErrorResponse;
-  if (!res.ok) {
-    throw new Error(data.error || "Falha na autenticação.");
+async function readErrorMessage(res: Response): Promise<string> {
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const data = (await res.json().catch(() => ({}))) as ErrorResponse;
+    if (data.error) return data.error;
+  } else {
+    const text = await res.text().catch(() => "");
+    if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
+      return `API indisponível (HTTP ${res.status}). Confira /api/health no deploy da Vercel.`;
+    }
+    if (text.trim()) return text.slice(0, 180);
   }
-  return data;
+  return `Falha na autenticação (HTTP ${res.status}).`;
+}
+
+async function parseJson<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return (await res.json()) as T;
 }
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {
@@ -60,15 +74,8 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
     return null;
   }
 
-  // API offline / HTML 404 from static host
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
-      throw new Error(
-        "API de login indisponível neste deploy. Confira se /api está ativo na Vercel."
-      );
-    }
-    throw new Error("Falha na autenticação.");
+    throw new Error(await readErrorMessage(res));
   }
 
   const data = (await res.json()) as AuthResponse;

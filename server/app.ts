@@ -3,14 +3,14 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
-import { authRouter } from "./routes/auth.ts";
-import { placementRouter } from "./routes/placement.ts";
-import { createLessonAudioRouter } from "./routes/lessonAudio.ts";
-import { createErrorMaterialsRouter } from "./routes/errorMaterials.ts";
-import { createWritingCorrectRouter } from "./routes/writingCorrect.ts";
-import { createReadingRouter } from "./routes/reading.ts";
-import { generateWithModelFallback, isQuotaError, quotaErrorMessage } from "./gemini.ts";
-import "./db.ts";
+import { authRouter } from "./routes/auth";
+import { placementRouter } from "./routes/placement";
+import { createLessonAudioRouter } from "./routes/lessonAudio";
+import { createErrorMaterialsRouter } from "./routes/errorMaterials";
+import { createWritingCorrectRouter } from "./routes/writingCorrect";
+import { createReadingRouter } from "./routes/reading";
+import { generateWithModelFallback, isQuotaError, quotaErrorMessage } from "./gemini";
+import "./db";
 
 function parseGeminiJson(text: string) {
   let cleaned = text.trim();
