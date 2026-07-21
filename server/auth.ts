@@ -58,33 +58,63 @@ export function signToken(user: UserRow): string {
 
 export function setAuthCookie(res: Response, token: string) {
   const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
-  res.cookie(AUTH_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProd,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
-  });
+  const parts = [
+    `${AUTH_COOKIE}=${encodeURIComponent(token)}`,
+    "Path=/",
+    "HttpOnly",
+    `Max-Age=${7 * 24 * 60 * 60}`,
+    "SameSite=Lax",
+  ];
+  if (isProd) parts.push("Secure");
+  res.setHeader("Set-Cookie", parts.join("; "));
 }
 
 export function clearAuthCookie(res: Response) {
   const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
-  res.clearCookie(AUTH_COOKIE, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProd,
-    path: "/",
-  });
+  const parts = [
+    `${AUTH_COOKIE}=`,
+    "Path=/",
+    "HttpOnly",
+    "Max-Age=0",
+    "SameSite=Lax",
+  ];
+  if (isProd) parts.push("Secure");
+  res.setHeader("Set-Cookie", parts.join("; "));
 }
 
 export function newUserId(): string {
   return randomUUID();
 }
 
+function parseCookieHeader(header: string | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!header) return out;
+  for (const part of header.split(";")) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    const key = part.slice(0, idx).trim();
+    const value = part.slice(idx + 1).trim();
+    if (!key) continue;
+    try {
+      out[key] = decodeURIComponent(value);
+    } catch {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 function readToken(req: Request): string | null {
-  const cookieToken = req.cookies?.[AUTH_COOKIE];
-  if (typeof cookieToken === "string" && cookieToken.length > 0) {
-    return cookieToken;
+  const fromParser = req.cookies?.[AUTH_COOKIE];
+  if (typeof fromParser === "string" && fromParser.length > 0) {
+    return fromParser;
+  }
+
+  const fromHeader = parseCookieHeader(
+    typeof req.headers.cookie === "string" ? req.headers.cookie : undefined
+  )[AUTH_COOKIE];
+  if (typeof fromHeader === "string" && fromHeader.length > 0) {
+    return fromHeader;
   }
 
   const header = req.headers.authorization;
